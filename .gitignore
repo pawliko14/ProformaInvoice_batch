@@ -14,7 +14,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+src/main/java/META-INF/.idea
 *.iws
 *.iml
 *.ipr

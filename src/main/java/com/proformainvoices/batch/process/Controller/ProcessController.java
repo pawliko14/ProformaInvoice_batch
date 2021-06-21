@@ -4,6 +4,7 @@ import com.proformainvoices.batch.process.JDBCTemplateImplementation.ImplProform
 import com.proformainvoices.batch.process.Logic.FileReading;
 import com.proformainvoices.batch.process.Logic.FolderCreator;
 import com.proformainvoices.batch.process.model.Proforma;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class ProcessController {
+
+
 
     @Autowired
     final FolderCreator folderCreator;
@@ -32,18 +36,26 @@ public class ProcessController {
 
     /**
      *  CRON table "30 06 * * 1-5 *"
-     *  creation of folder should start at 6:30 each day except weekends
+     *  creation of folder should start at 6:00 each day except weekends
      *
      * @throws IOException
      */
-    @Scheduled(cron = "30 06 * * 1-5 *")
+    @Scheduled(cron ="0 30 6 * * 1-5", zone = "GMT+2:00")
     public void doScheduledDirctoryCreation() throws IOException {
+
+        System.out.println("dir creation");
         folderCreator.CreateDir();
 
-        System.out.println("dir created");
+        System.out.println("dir created3");
     }
 
-    @Scheduled(cron = "*/15 * * * * *")
+    /**
+     *  CRON table " 0 0 10 * * 1-5"
+     *  do analitics based on file .sta files in current direcotry
+     *
+     * @throws IOException
+     */
+    @Scheduled(cron = "0 0 10 * * 1-5" , zone = "GMT+2:00")
     public void doFiltrationOnDatabase() throws IOException {
         fileReading.setFileNameDirectoryName();
         List<String> listOfFilesToRead = fileReading.getCompletePaths();
@@ -51,7 +63,8 @@ public class ProcessController {
         for(String Paths : listOfFilesToRead) {
 
             List<String> linesFromFile = fileReading.readProformaRecordsFromFile(Paths);
-            //     linesFromFile.forEach(System.out::println);
+            log.info("lines from file");
+            linesFromFile.forEach(log::info);
 
 
             // finding all records in Proforma table
@@ -62,8 +75,8 @@ public class ProcessController {
                     .map(s -> s.getDocumentNumber())
                     .collect(Collectors.toList());
 
-//        System.out.println("list of document numbers");
-//        listOfDocumentNumbers.forEach(System.out::println);
+            log.info("list of document numbers");
+            listOfDocumentNumbers.forEach(log::info);
 
 
             // compare data from database and taken from file, matching records assign to list
@@ -71,8 +84,8 @@ public class ProcessController {
                     .filter(element -> linesFromFile.contains(element))
                     .collect(Collectors.toList());
 
-//        System.out.println("collected matching records");
-//        collectedMatchingRecords.forEach(System.out::println);
+        log.info("collected matching records");
+        collectedMatchingRecords.forEach(log::info);
 
             if (collectedMatchingRecords.size() != 0) {
                 for (String s : collectedMatchingRecords) {
@@ -84,7 +97,7 @@ public class ProcessController {
                         implProformaRepositoryJDBCTemplate.updatePaid(recordByDocumentNumber);
                         System.out.println("record updated" + recordByDocumentNumber);
                     } else {
-                        System.out.println("Cannot do operations, CollectedMatchingRecords returns 0");
+                        log.info("Cannot do operations, CollectedMatchingRecords returns 0");
                     }
                 }
             }

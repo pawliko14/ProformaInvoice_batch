@@ -1,6 +1,7 @@
 package com.proformainvoices.batch.process.Logic;
 
 import com.proformainvoices.batch.process.Parameters.Parameters;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class FileReading {
 
     private String pathToDirectory;
@@ -29,7 +31,8 @@ public class FileReading {
     
     public List<String> getCompletePaths(){
         if(this.completePathsToFIle == null || this.completePathsToFIle.size()==0){
-            System.out.println("cannot return empty path to file return '' ");
+            log.debug("cannot return empty path to file - return ''");
+            //System.out.println("cannot return empty path to file return '' ");
             return new ArrayList<>();
         }
         return completePathsToFIle;
